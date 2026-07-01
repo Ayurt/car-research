@@ -171,20 +171,6 @@ car-research/
 └── README.md
 ```
 
----
-
-## Screen Recording Checklist
-
-For your Loom submission, show:
-1. Reading the assignment brief
-2. Prompting Cursor/AI with product decisions
-3. Reviewing and fixing AI output (e.g., Prisma adapter)
-4. Running `npm run setup && npm run dev`
-5. Walking through the wizard end-to-end
-6. Adding cars to shortlist and comparing
-7. Brief README / deploy walkthrough
-
----
 
 ## License
 
