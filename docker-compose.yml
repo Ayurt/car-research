@@ -4,9 +4,9 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - db-data:/data
+      - app-data:/data
     environment:
-      - DATABASE_URL=file:/data/dev.db
+      - SHORTLIST_STORE_PATH=/data/shortlist.json
 
 volumes:
-  db-data:
+  app-data:

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPrisma } from "@/lib/db";
 import { getCarById } from "@/lib/cars";
+import {
+  addShortlistItem,
+  getShortlistCarIds,
+  removeShortlistItem,
+} from "@/lib/shortlist-store";
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,13 +13,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "sessionId required" }, { status: 400 });
     }
 
-    const items = await getPrisma().shortlistItem.findMany({
-      where: { sessionId },
-      orderBy: { addedAt: "desc" },
-    });
-
-    const cars = items
-      .map((item) => getCarById(item.carId))
+    const carIds = await getShortlistCarIds(sessionId);
+    const cars = carIds
+      .map((id) => getCarById(id))
       .filter((car): car is NonNullable<typeof car> => car !== undefined);
 
     return NextResponse.json(
@@ -40,13 +40,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Car not found" }, { status: 404 });
     }
 
-    const item = await getPrisma().shortlistItem.upsert({
-      where: { sessionId_carId: { sessionId, carId } },
-      update: {},
-      create: { sessionId, carId },
-    });
-
-    return NextResponse.json({ success: true, item });
+    await addShortlistItem(sessionId, carId);
+    return NextResponse.json({ success: true, carId });
   } catch (err) {
     console.error("Shortlist POST error:", err);
     return NextResponse.json({ error: "Failed to add to shortlist" }, { status: 500 });
@@ -62,7 +57,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "sessionId and carId required" }, { status: 400 });
     }
 
-    await getPrisma().shortlistItem.deleteMany({ where: { sessionId, carId } });
+    await removeShortlistItem(sessionId, carId);
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Shortlist DELETE error:", err);
