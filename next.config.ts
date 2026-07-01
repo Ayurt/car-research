@@ -3,6 +3,17 @@ import path from "node:path";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  serverExternalPackages: [
+    "better-sqlite3",
+    "@prisma/client",
+    "@prisma/adapter-better-sqlite3",
+  ],
+  outputFileTracingIncludes: {
+    "/*": [
+      "./src/generated/prisma/**/*",
+      "./node_modules/@prisma/client/**/*",
+    ],
+  },
   turbopack: {
     root: path.resolve(__dirname),
   },

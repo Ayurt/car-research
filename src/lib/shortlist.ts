@@ -1,9 +1,9 @@
-import { prisma } from "@/lib/db";
+import { getPrisma } from "@/lib/db";
 import { getCarById } from "@/lib/cars";
 import type { Car } from "@/types";
 
 export async function getShortlistCars(sessionId: string): Promise<Car[]> {
-  const items = await prisma.shortlistItem.findMany({
+  const items = await getPrisma().shortlistItem.findMany({
     where: { sessionId },
     orderBy: { addedAt: "desc" },
     select: { carId: true },
@@ -15,5 +15,5 @@ export async function getShortlistCars(sessionId: string): Promise<Car[]> {
 }
 
 export async function getShortlistCount(sessionId: string): Promise<number> {
-  return prisma.shortlistItem.count({ where: { sessionId } });
+  return getPrisma().shortlistItem.count({ where: { sessionId } });
 }

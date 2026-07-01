@@ -7,28 +7,22 @@ import { useShortlist } from "@/components/ShortlistProvider";
 import type { Car } from "@/types";
 import { getSessionId } from "@/lib/session";
 
-interface ShortlistViewProps {
-  initialCars: Car[];
-}
-
-export function ShortlistView({ initialCars }: ShortlistViewProps) {
-  const [cars, setCars] = useState(initialCars);
+export function ShortlistView() {
+  const [cars, setCars] = useState<Car[]>([]);
+  const [loading, setLoading] = useState(true);
   const { setCount } = useShortlist();
 
-  // Hydrate from API if server had no cookie yet (session only in localStorage)
   useEffect(() => {
-    if (initialCars.length > 0) return;
     const sessionId = getSessionId();
     fetch(`/api/shortlist?sessionId=${sessionId}`)
       .then((r) => r.json())
       .then((data) => {
-        if (data.cars?.length) {
-          setCars(data.cars);
-          setCount(data.count);
-        }
+        setCars(data.cars ?? []);
+        setCount(data.count ?? 0);
       })
-      .catch(() => {});
-  }, [initialCars.length, setCount]);
+      .catch(() => setCars([]))
+      .finally(() => setLoading(false));
+  }, [setCount]);
 
   async function removeCar(carId: string) {
     const sessionId = getSessionId();
@@ -47,13 +41,19 @@ export function ShortlistView({ initialCars }: ShortlistViewProps) {
         <div className="mb-8">
           <h2 className="text-3xl sm:text-4xl font-bold text-white">My Shortlist</h2>
           <p className="mt-2 text-slate-400">
-            {cars.length > 0
+            {loading
+              ? "Loading your saved cars..."
+              : cars.length > 0
               ? `${cars.length} car${cars.length > 1 ? "s" : ""} saved — compare and decide with confidence`
               : "Save cars from your matches to compare them here"}
           </p>
         </div>
 
-        {cars.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-24">
+            <span className="w-8 h-8 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
+          </div>
+        ) : cars.length === 0 ? (
           <div className="text-center py-20 bg-[#151929]/50 rounded-2xl border border-white/5">
             <p className="text-slate-400 mb-6">Your shortlist is empty</p>
             <Link
@@ -102,6 +102,7 @@ export function ShortlistView({ initialCars }: ShortlistViewProps) {
                       <td className="p-4 text-orange-400 font-semibold">{car.reviewScore}/5</td>
                       <td className="p-4">
                         <button
+                          type="button"
                           onClick={() => removeCar(car.id)}
                           className="text-red-400 hover:text-red-300 text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-red-500/10"
                         >
