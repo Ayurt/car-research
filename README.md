@@ -134,24 +134,6 @@ Each match shows a **match %** and **plain-English reasons** ("Fits your ₹8–
 
 ---
 
-## Deploy to Railway (Recommended)
-
-1. Push this repo to GitHub
-2. Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub
-3. Select this repo — Railway auto-detects the `Dockerfile`
-4. Add a **volume** mounted at `/data` for SQLite persistence
-5. Set env: `DATABASE_URL=file:/data/dev.db`
-6. Deploy — you'll get a public URL
-
-### Deploy to Render
-
-1. New Web Service → Connect GitHub repo
-2. Environment: Docker
-3. Add persistent disk at `/data`
-4. Set `DATABASE_URL=file:/data/dev.db`
-
----
-
 ## Project Structure
 
 ```
