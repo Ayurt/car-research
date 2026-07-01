@@ -1,8 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { BodyType, BuyerPreferences, FuelType, MatchResult } from "@/types";
+import { getSessionId } from "@/lib/session";
 import { CarLoader } from "./CarLoader";
 
 const CarCard = dynamic(() => import("./CarCard").then((m) => ({ default: m.CarCard })), {
@@ -48,9 +49,23 @@ export function Wizard() {
   const [step, setStep] = useState(0);
   const [prefs, setPrefs] = useState<BuyerPreferences>(DEFAULT_PREFS);
   const [results, setResults] = useState<MatchResult[]>([]);
+  const [shortlistedIds, setShortlistedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const wizardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (step !== 3 || loading) return;
+
+    const sessionId = getSessionId();
+    fetch(`/api/shortlist?sessionId=${sessionId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        const ids = new Set<string>((data.cars ?? []).map((c: { id: string }) => c.id));
+        setShortlistedIds(ids);
+      })
+      .catch(() => setShortlistedIds(new Set()));
+  }, [step, loading, results]);
 
   const scrollToTop = useCallback(() => {
     wizardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -340,7 +355,12 @@ export function Wizard() {
                 ) : (
                   <div className="grid sm:grid-cols-2 gap-5">
                     {results.map((result, i) => (
-                      <CarCard key={result.car.id} result={result} rank={i + 1} />
+                      <CarCard
+                        key={result.car.id}
+                        result={result}
+                        rank={i + 1}
+                        shortlisted={shortlistedIds.has(result.car.id)}
+                      />
                     ))}
                   </div>
                 )}

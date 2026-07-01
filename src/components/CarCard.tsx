@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { CarImage } from "@/components/CarImage";
 import { useShortlist } from "@/components/ShortlistProvider";
 import type { MatchResult } from "@/types";
@@ -26,25 +26,22 @@ export const CarCard = memo(function CarCard({ result, rank, shortlisted }: CarC
   const [loading, setLoading] = useState(false);
   const [isShortlisted, setIsShortlisted] = useState(shortlisted ?? false);
 
-  async function toggleShortlist() {
+  useEffect(() => {
+    if (shortlisted) setIsShortlisted(true);
+  }, [shortlisted]);
+
+  async function addToShortlist() {
     setLoading(true);
     const sessionId = getSessionId();
     try {
-      if (isShortlisted) {
-        const res = await fetch(`/api/shortlist?sessionId=${sessionId}&carId=${car.id}`, { method: "DELETE" });
-        if (!res.ok) throw new Error("Failed to remove");
-        setIsShortlisted(false);
-        setCount((c) => Math.max(0, c - 1));
-      } else {
-        const res = await fetch("/api/shortlist", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId, carId: car.id }),
-        });
-        if (!res.ok) throw new Error("Failed to add");
-        setIsShortlisted(true);
-        setCount((c) => c + 1);
-      }
+      const res = await fetch("/api/shortlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, carId: car.id }),
+      });
+      if (!res.ok) throw new Error("Failed to add");
+      setIsShortlisted(true);
+      setCount((c) => c + 1);
       window.dispatchEvent(new Event("shortlist-updated"));
       refreshCount();
     } catch {
@@ -111,17 +108,19 @@ export const CarCard = memo(function CarCard({ result, rank, shortlisted }: CarC
           ))}
         </ul>
 
-        <button
-          onClick={toggleShortlist}
-          disabled={loading}
-          className={`mt-5 w-full py-3 rounded-xl text-sm font-semibold transition-colors ${
-            isShortlisted
-              ? "bg-orange-500/20 text-orange-300 border border-orange-500/40"
-              : "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
-          }`}
-        >
-          {loading ? "Saving..." : isShortlisted ? "✓ Saved to Shortlist" : "+ Add to Shortlist"}
-        </button>
+        {isShortlisted ? (
+          <p className="mt-5 w-full py-3 rounded-xl text-sm font-semibold text-center bg-orange-500/20 text-orange-300 border border-orange-500/40">
+            ✓ In your shortlist
+          </p>
+        ) : (
+          <button
+            onClick={addToShortlist}
+            disabled={loading}
+            className="mt-5 w-full py-3 rounded-xl text-sm font-semibold transition-colors bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+          >
+            {loading ? "Saving..." : "+ Add to Shortlist"}
+          </button>
+        )}
       </div>
     </div>
   );
