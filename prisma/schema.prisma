@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Car {
+  id            String   @id
+  make          String
+  model         String
+  variant       String
+  bodyType      String
+  fuelType      String
+  priceLakh     Float
+  mileageKmpl   Float
+  safetyRating  Int
+  seats         Int
+  transmission  String
+  features      String
+  reviewScore   Float
+  imageUrl      String
+  shortlistItems ShortlistItem[]
+}
+
+model ShortlistItem {
+  id        String   @id @default(cuid())
+  sessionId String
+  carId     String
+  car       Car      @relation(fields: [carId], references: [id], onDelete: Cascade)
+  addedAt   DateTime @default(now())
+
+  @@unique([sessionId, carId])
+  @@index([sessionId])
+}
