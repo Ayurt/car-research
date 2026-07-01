@@ -21,7 +21,7 @@ interface CarCardProps {
 }
 
 export const CarCard = memo(function CarCard({ result, rank, shortlisted }: CarCardProps) {
-  const { refreshCount } = useShortlist();
+  const { setCount, refreshCount } = useShortlist();
   const { car, matchPercent, reasons } = result;
   const [loading, setLoading] = useState(false);
   const [isShortlisted, setIsShortlisted] = useState(shortlisted ?? false);
@@ -31,18 +31,24 @@ export const CarCard = memo(function CarCard({ result, rank, shortlisted }: CarC
     const sessionId = getSessionId();
     try {
       if (isShortlisted) {
-        await fetch(`/api/shortlist?sessionId=${sessionId}&carId=${car.id}`, { method: "DELETE" });
+        const res = await fetch(`/api/shortlist?sessionId=${sessionId}&carId=${car.id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Failed to remove");
         setIsShortlisted(false);
+        setCount((c) => Math.max(0, c - 1));
       } else {
-        await fetch("/api/shortlist", {
+        const res = await fetch("/api/shortlist", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ sessionId, carId: car.id }),
         });
+        if (!res.ok) throw new Error("Failed to add");
         setIsShortlisted(true);
+        setCount((c) => c + 1);
       }
       window.dispatchEvent(new Event("shortlist-updated"));
       refreshCount();
+    } catch {
+      /* keep UI state unchanged on failure */
     } finally {
       setLoading(false);
     }

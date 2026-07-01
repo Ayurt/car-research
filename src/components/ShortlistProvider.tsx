@@ -6,7 +6,7 @@ import { getSessionId } from "@/lib/session";
 interface ShortlistContextValue {
   count: number;
   refreshCount: () => void;
-  setCount: (n: number) => void;
+  setCount: (n: number | ((prev: number) => number)) => void;
 }
 
 const ShortlistContext = createContext<ShortlistContextValue>({
@@ -20,21 +20,28 @@ const COUNT_CACHE_KEY = "shortlist_count";
 export function ShortlistProvider({ children }: { children: React.ReactNode }) {
   const [count, setCountState] = useState(0);
 
-  const setCount = useCallback((n: number) => {
-    setCountState(n);
-    try {
-      sessionStorage.setItem(COUNT_CACHE_KEY, String(n));
-    } catch {
-      /* ignore */
-    }
+  const setCount = useCallback((n: number | ((prev: number) => number)) => {
+    setCountState((prev) => {
+      const next = typeof n === "function" ? n(prev) : n;
+      try {
+        sessionStorage.setItem(COUNT_CACHE_KEY, String(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
   }, []);
 
   const refreshCount = useCallback(() => {
     const sessionId = getSessionId();
     fetch(`/api/shortlist?sessionId=${sessionId}`)
       .then((r) => r.json())
-      .then((data) => setCount(data.count ?? 0))
-      .catch(() => setCount(0));
+      .then((data) => {
+        if (typeof data.count === "number") setCount(data.count);
+      })
+      .catch(() => {
+        /* keep current count on network error */
+      });
   }, [setCount]);
 
   useEffect(() => {
