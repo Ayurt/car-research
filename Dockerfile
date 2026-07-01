@@ -1,11 +1,11 @@
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
 
 # Install ALL dependencies (devDeps required for Next.js/Tailwind build)
 FROM base AS deps
 COPY package.json package-lock.json ./
-RUN npm ci --include=dev
+RUN npm install --include=dev --no-audit --no-fund
 
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
