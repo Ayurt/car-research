@@ -4,7 +4,9 @@
 
 A guided car-finder for confused buyers. Answer 3 quick questions about budget, body type, and priorities — get ranked matches with explanations, then save favorites to a persistent shortlist with side-by-side comparison.
 
-**Live demo:** Deploy using instructions below (Railway / Docker recommended).
+**GitHub:** [github.com/Ayurt/car-research](https://github.com/Ayurt/car-research)
+
+**Live demo:** Deploy using instructions below (Railway recommended).
 
 ---
 
