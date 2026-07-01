@@ -2,14 +2,19 @@ FROM node:22-alpine AS base
 RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
 
-# Install ALL dependencies (devDeps required for Next.js/Tailwind build)
+# Install deps only — skip postinstall (prisma schema not copied yet)
 FROM base AS deps
 COPY package.json package-lock.json ./
-RUN npm install --include=dev --no-audit --no-fund
+RUN npm install --include=dev --no-audit --no-fund --ignore-scripts
 
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY package.json package-lock.json prisma.config.ts ./
+COPY prisma ./prisma
+COPY data ./data
+COPY public ./public
+COPY src ./src
+COPY next.config.ts tsconfig.json postcss.config.mjs ./
 ENV DATABASE_URL="file:./dev.db"
 RUN npx prisma generate \
  && npx prisma migrate deploy \
@@ -39,6 +44,4 @@ COPY --from=builder /app/node_modules/prebuild-install ./node_modules/prebuild-i
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-
-# Copy seeded DB to volume on first run (Railway volume starts empty)
 CMD ["sh", "-c", "if [ ! -f /data/dev.db ]; then cp ./seed.db /data/dev.db; fi && node server.js"]
