@@ -6,7 +6,7 @@ A guided car-finder for confused buyers. Answer 3 quick questions about budget, 
 
 **GitHub:** [github.com/Ayurt/car-research](https://github.com/Ayurt/car-research)
 
-\n
+
 
 **Live Link:** [https://car-research-production.up.railway.app/](https://car-research-production.up.railway.app/)
 
